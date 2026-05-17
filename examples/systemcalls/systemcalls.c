@@ -15,9 +15,27 @@ bool do_system(const char *cmd)
  *  Call the system() function with the command set in the cmd
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
+ *
 */
+    if( cmd == NULL )
+    {
+        return false;
+    }
 
-    return true;
+    int status = system(cmd);
+
+    if (status == -1)
+    {
+        perror("system failed");
+        return false;
+    }
+
+    if(WIFEXITED(status)&&WEXITSTATUS(status) == 0)
+    {
+        return true;
+    }
+
+    return false;
 }
 
 /**
@@ -47,7 +65,7 @@ bool do_exec(int count, ...)
     command[count] = NULL;
     // this line is to avoid a compile warning before your implementation is complete
     // and may be removed
-    command[count] = command[count];
+    //command[count] = command[count];
 
 /*
  * TODO:
@@ -59,9 +77,42 @@ bool do_exec(int count, ...)
  *
 */
 
+    pid_t pid = fork();
+    int status;
+    
+    if( pid == -1 )
+    {
+	    perror("Could not create child process");
+	    return false;
+    }
+    else
+    {
+	    if( pid == 0 )
+	    {
+		if(execv(command[0], command) == -1)
+		{
+			perror("execv failure");
+			exit(-1);
+		}
+
+	    }
+	    else
+	    {
+		    waitpid(pid, &status, 0);
+	    }
+    }
+
+
     va_end(args);
 
-    return true;
+
+    if(WIFEXITED(status)&&WEXITSTATUS(status) == 0)
+    {
+        return true;
+    }
+
+
+    return false;
 }
 
 /**
@@ -82,7 +133,8 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     command[count] = NULL;
     // this line is to avoid a compile warning before your implementation is complete
     // and may be removed
-    command[count] = command[count];
+    //command[count] = command[count];
+
 
 
 /*
@@ -92,8 +144,52 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
+    pid_t pid = fork();
+    int status;
+
+    if( pid == -1 )
+    {
+            perror("Could not create child process");
+            return false;
+    }
+    else
+    {
+            if( pid == 0 )
+            {
+
+		int fd = open(outputfile, O_CREAT | O_WRONLY);
+		if( fd == -1)
+		{
+			perror("open failed");
+			exit(-1);
+		}
+		if( dup2(fd, 1) == -1 )
+		{
+			perror("dup2");
+			exit(-1);
+		}
+		close(fd);
+		if(execv(command[0], command) == -1)
+                {
+                        perror("execv failure");
+			exit(-1);
+		}
+
+            }
+            else
+            {
+                    waitpid(pid, &status, 0);
+            }
+    }
+
 
     va_end(args);
 
-    return true;
+
+    if(WIFEXITED(status)&&WEXITSTATUS(status) == 0)
+    {
+        return true;
+    }
+
+    return false;
 }
