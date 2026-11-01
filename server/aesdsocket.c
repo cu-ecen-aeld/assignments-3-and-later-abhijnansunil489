@@ -116,7 +116,8 @@ int main(int argc, char *argv[])
                 }
                 if( pid > 0)
                 {
-                        close(sockfd);
+                        syslog(LOG_INFO, "daemon created with pid %d", pid);
+			close(sockfd);
 			closelog();
                         return 0;
                 }
