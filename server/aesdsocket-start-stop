@@ -4,7 +4,7 @@ case "$1" in
 	start)
 		echo "Starting aesdsocket server"
 		start-stop-daemon -S -n aesdsocket -a \
-		/home/sabh/Desktop/assignment-1-abhijnansunil489/server/aesdsocket -- -d 
+		/usr/bin/aesdsocket -- -d
 		;;
 	stop)
 		echo "Stopping aesdsocket server"
